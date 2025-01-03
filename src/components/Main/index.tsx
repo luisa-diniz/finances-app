@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, Button, FlatList, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home() {
-  const [title, setTitle] = useState('');
-  const [total, setTotal] = useState(0);
+  const [category, setCategory] = useState('');
   const [expense, setExpense] = useState('');
-  const [expensesList, setExpensesList] = useState<{ title: string, value: string }[]>([]);
+  const [total, setTotal] = useState(0);
+  const [expensesList, setExpensesList] = useState<{ category: string, value: string }[]>([]);
+
+  // Lista de categorias pré-definidas
+  const categories = ['Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Outros'];
 
   // Recuperar a lista de despesas ao carregar o app
   const loadExpenses = async () => {
@@ -21,7 +25,7 @@ export default function Home() {
   };
 
   // Salvar lista de despesas no AsyncStorage
-  const saveExpenses = async (newExpensesList: { title: string, value: string }[]) => {
+  const saveExpenses = async (newExpensesList: { category: string, value: string }[]) => {
     try {
       await AsyncStorage.setItem('expenses', JSON.stringify(newExpensesList));
     } catch (error) {
@@ -30,7 +34,7 @@ export default function Home() {
   };
 
   // Função para calcular o total das despesas
-  const calculateTotal = (expenses: { title: string, value: string }[]) => {
+  const calculateTotal = (expenses: { category: string, value: string }[]) => {
     const totalSum = expenses.reduce((sum, expense) => sum + parseFloat(expense.value), 0);
     setTotal(totalSum);
   };
@@ -40,28 +44,28 @@ export default function Home() {
   }, []);
 
   const addExpense = () => {
-    if (title.trim() !== '' && !isNaN(Number(expense)) && expense.trim() !== '') {
-      const newExpense = { title, value: expense };
+    if (!isNaN(Number(expense)) && expense.trim() !== '') {
+      const newExpense = { category, value: expense };
       const updatedExpenses = [...expensesList, newExpense];
       setExpensesList(updatedExpenses);
       saveExpenses(updatedExpenses); // Salva a lista atualizada no AsyncStorage
-      setTitle('');
       setExpense('');
+      setCategory('');
       calculateTotal(updatedExpenses);
     } else {
-      alert('Por favor, insira um título válido e um valor numérico válido para a despesa.');
+      alert('Por favor, selecione uma categoria e insira um valor numérico válido para a despesa.');
     }
   };
+
   const clearList = async () => {
     try {
-      await AsyncStorage.clear();      
+      await AsyncStorage.clear();
       setExpensesList([]);
       setTotal(0);
     } catch (error) {
       console.error('Error clearing expenses:', error);
     }
-  }
-
+  };
 
   return (
     <View style={styles.container}>
@@ -71,12 +75,16 @@ export default function Home() {
       </View>
       <Text style={styles.headerText}>Adicionar Despesas</Text>
       <View style={styles.inputContainer}>
-        <TextInput
+        <Picker
+          selectedValue={category}
           style={styles.inputBox}
-          placeholder="Título da despesa"
-          value={title}
-          onChangeText={setTitle}
-        />
+          onValueChange={(itemValue) => setCategory(itemValue)}
+        >
+          <Picker.Item label="Selecione a categoria" value="" />
+          {categories.map((cat, index) => (
+            <Picker.Item key={index} label={cat} value={cat} />
+          ))}
+        </Picker>
         <TextInput
           style={styles.inputBox}
           placeholder="Valor"
@@ -89,19 +97,18 @@ export default function Home() {
         <Button title="Adicionar" onPress={addExpense} color="#800080" />
         <Button title="Resetar" onPress={clearList} color="red" />
       </View>
-      
+
       <FlatList
         data={expensesList}
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
-            <Text style={styles.itemTitle}>{item.title}</Text>
+            <Text style={styles.itemTitle}>{item.category}</Text>
             <Text style={styles.itemValue}>R$ {item.value}</Text>
           </View>
         )}
         keyExtractor={(item, index) => index.toString()}
-        />
-      </View>
-
+      />
+    </View>
   );
 }
 
@@ -133,14 +140,13 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     display: 'flex',
-    gap: 15,
+    gap: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 40,
     marginBottom: 20,
   },
   inputBox: {
-    height: 40,
+    height: 55,
     borderColor: '#ddd',
     borderWidth: 1,
     width: '50%',
@@ -164,7 +170,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%'
+    width: '100%',
   },
   itemTitle: {
     fontSize: 18,
@@ -173,5 +179,13 @@ const styles = StyleSheet.create({
   itemValue: {
     fontSize: 18,
     color: '#800080',
+  },
+  picker: {
+    width: '70%',  // Ajusta a largura do Picker para não ser cortado
+    height: 40,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    marginBottom: 15,
+    borderRadius: 5,
   },
 });
