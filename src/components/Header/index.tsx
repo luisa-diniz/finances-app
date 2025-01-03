@@ -67,7 +67,7 @@ export default function Home() {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Despesas</Text>
-        <Text>R$ {total}</Text>
+        <Text style={styles.itemTitle}>R$ {total}</Text>
       </View>
       <Text style={styles.headerText}>Adicionar Despesas</Text>
       <View style={styles.inputContainer}>
@@ -87,8 +87,9 @@ export default function Home() {
       </View>
       <View style={styles.buttonsContainer}>
         <Button title="Adicionar" onPress={addExpense} color="#800080" />
-        <Button title="Resetar" onPress={clearList} color="red" /> 
+        <Button title="Resetar" onPress={clearList} color="red" />
       </View>
+      
       <FlatList
         data={expensesList}
         renderItem={({ item }) => (
@@ -98,8 +99,9 @@ export default function Home() {
           </View>
         )}
         keyExtractor={(item, index) => index.toString()}
-      />
-    </View>
+        />
+      </View>
+
   );
 }
 
@@ -110,22 +112,24 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     backgroundColor: '#fff',
-    paddingTop: 40,
+    paddingTop: 70,
     paddingBottom: 20,
     paddingLeft: 20,
     paddingRight: 20,
     width: '100%',
   },
   headerContainer: {
-    display: 'flex',
-    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
     paddingHorizontal: 40,
+    paddingVertical: 10,
+    borderRadius: 10,
     marginBottom: 20,
+    alignItems: 'center',
   },
   headerText: {
     fontSize: 25,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   inputContainer: {
     display: 'flex',
@@ -144,14 +148,23 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 5,
   },
+  buttonsContainer: {
+    display: 'flex',
+    gap: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   itemContainer: {
+    backgroundColor: '#e9e9e9',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    marginBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 5,
-    width: '100%',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
+    alignItems: 'center',
+    width: '100%'
   },
   itemTitle: {
     fontSize: 18,
@@ -160,11 +173,5 @@ const styles = StyleSheet.create({
   itemValue: {
     fontSize: 18,
     color: '#800080',
-  },
-  buttonsContainer: {
-    display: 'flex',
-    gap: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
 });
