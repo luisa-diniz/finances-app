@@ -7,25 +7,25 @@ export default function Home() {
   const [category, setCategory] = useState('');
   const [expense, setExpense] = useState('');
   const [total, setTotal] = useState(0);
-  const [expensesList, setExpensesList] = useState<{ category: string, value: string }[]>([]);
+  const [expensesList, setExpensesList] = useState<{ category: string, value: number }[]>([]);
 
-  // Lista de categorias pré-definidas
-  const categories = ['Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Outros'];
+  const categories = ['Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Casa', 'Outros'];
 
   // Recuperar a lista de despesas ao carregar o app
   const loadExpenses = async () => {
     try {
       const savedExpenses = await AsyncStorage.getItem('expenses');
       if (savedExpenses) {
-        setExpensesList(JSON.parse(savedExpenses));  // Converte de volta para o formato de lista
+        const parsedExpenses = JSON.parse(savedExpenses);
+        setExpensesList(parsedExpenses);
+        calculateTotal(parsedExpenses);  
       }
     } catch (error) {
       console.error('Error loading expenses:', error);
     }
   };
 
-  // Salvar lista de despesas no AsyncStorage
-  const saveExpenses = async (newExpensesList: { category: string, value: string }[]) => {
+  const saveExpenses = async (newExpensesList: { category: string, value: number }[]) => {
     try {
       await AsyncStorage.setItem('expenses', JSON.stringify(newExpensesList));
     } catch (error) {
@@ -33,10 +33,20 @@ export default function Home() {
     }
   };
 
-  // Função para calcular o total das despesas
-  const calculateTotal = (expenses: { category: string, value: string }[]) => {
-    const totalSum = expenses.reduce((sum, expense) => sum + parseFloat(expense.value), 0);
+  const calculateTotal = (expenses: { category: string, value: number }[]) => {
+    const totalSum = expenses.reduce((sum, expense) => sum + expense.value, 0);
     setTotal(totalSum);
+  };
+
+  const calculateTotalByCategory = (expenses: { category: string, value: number }[]) => {
+    return expenses.reduce<{ [key: string]: number }>((acc, expense) => {
+      if (acc[expense.category]) {
+        acc[expense.category] += expense.value;
+      } else {
+        acc[expense.category] = expense.value;
+      }
+      return acc;
+    }, {});
   };
 
   useEffect(() => {
@@ -44,16 +54,18 @@ export default function Home() {
   }, []);
 
   const addExpense = () => {
-    if (!isNaN(Number(expense)) && expense.trim() !== '') {
-      const newExpense = { category, value: expense };
+    const numericExpense = parseFloat(expense);
+
+    if (category.trim() !== '' && !isNaN(numericExpense) && numericExpense > 0) {
+      const newExpense = { category, value: numericExpense };
       const updatedExpenses = [...expensesList, newExpense];
       setExpensesList(updatedExpenses);
-      saveExpenses(updatedExpenses); // Salva a lista atualizada no AsyncStorage
+      saveExpenses(updatedExpenses);
       setExpense('');
       setCategory('');
       calculateTotal(updatedExpenses);
     } else {
-      alert('Por favor, selecione uma categoria e insira um valor numérico válido para a despesa.');
+      Alert.alert('Erro', 'Por favor, selecione uma categoria e insira um valor numérico válido para a despesa.');
     }
   };
 
@@ -67,11 +79,13 @@ export default function Home() {
     }
   };
 
+  const groupedExpenses = calculateTotalByCategory(expensesList);  // Agrupa as despesas por categoria para exibição.
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Despesas</Text>
-        <Text style={styles.itemTitle}>R$ {total}</Text>
+        <Text style={styles.itemTitle}>R$ {total.toFixed(2)}</Text>
       </View>
       <Text style={styles.headerText}>Adicionar Despesas</Text>
       <View style={styles.inputContainer}>
@@ -90,20 +104,19 @@ export default function Home() {
           placeholder="Valor"
           keyboardType="numeric"
           value={expense}
-          onChangeText={setExpense}
+          onChangeText={(text) => setExpense(text.replace(/[^\d.,]/g, ''))}
         />
       </View>
       <View style={styles.buttonsContainer}>
         <Button title="Adicionar" onPress={addExpense} color="#800080" />
         <Button title="Resetar" onPress={clearList} color="red" />
       </View>
-
       <FlatList
-        data={expensesList}
+        data={Object.keys(groupedExpenses)}
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
-            <Text style={styles.itemTitle}>{item.category}</Text>
-            <Text style={styles.itemValue}>R$ {item.value}</Text>
+            <Text style={styles.itemTitle}>{item}</Text>
+            <Text style={styles.itemValue}>R$ {groupedExpenses[item].toFixed(2)}</Text>
           </View>
         )}
         keyExtractor={(item, index) => index.toString()}
@@ -181,7 +194,6 @@ const styles = StyleSheet.create({
     color: '#800080',
   },
   picker: {
-    width: '70%',  // Ajusta a largura do Picker para não ser cortado
     height: 40,
     borderColor: '#ddd',
     borderWidth: 1,
