@@ -84,8 +84,8 @@ export default function Home() {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>Despesas</Text>
-        <Text style={styles.itemTitle}>R$ {total.toFixed(2)}</Text>
+        <Text style={styles.headerText}>Total</Text>
+        <Text style={styles.headerText}>R$ {total.toFixed(2)}</Text>
       </View>
       <Text style={styles.headerText}>Adicionar Despesas</Text>
       <View style={styles.inputContainer}>
@@ -94,7 +94,7 @@ export default function Home() {
           style={styles.inputBox}
           onValueChange={(itemValue) => setCategory(itemValue)}
         >
-          <Picker.Item label="Selecione a categoria" value="" />
+          <Picker.Item label="Categoria" value="" />
           {categories.map((cat, index) => (
             <Picker.Item key={index} label={cat} value={cat} />
           ))}
@@ -104,11 +104,11 @@ export default function Home() {
           placeholder="Valor"
           keyboardType="numeric"
           value={expense}
-          onChangeText={(text) => setExpense(text.replace(/[^\d.,]/g, ''))}
-        />
+          onChangeText={(text) => setExpense(text.replace(/[^\d.,]/g, '').replace(/,/g, '.'))}
+          />
       </View>
       <View style={styles.buttonsContainer}>
-        <Button title="Adicionar" onPress={addExpense} color="#800080" />
+        <Button title="Adicionar" onPress={addExpense} color="#636363" />
         <Button title="Resetar" onPress={clearList} color="red" />
       </View>
       <FlatList
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#494848',
     paddingTop: 70,
     paddingBottom: 20,
     paddingLeft: 20,
@@ -139,17 +139,23 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   headerContainer: {
-    backgroundColor: '#f0f0f0',
+    display: 'flex',
+    gap: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#909090',
     paddingHorizontal: 40,
     paddingVertical: 10,
-    borderRadius: 10,
-    marginBottom: 20,
-    alignItems: 'center',
+    borderRadius: 40,
+    margin: 20,
+    minHeight: 70,
+    minWidth: '85%',
   },
   headerText: {
     fontSize: 25,
     fontWeight: 'bold',
-    marginBottom: 10,
+    color: '#fff',
   },
   inputContainer: {
     display: 'flex',
@@ -157,15 +163,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+    marginTop: 20,
   },
   inputBox: {
     height: 55,
-    borderColor: '#ddd',
+    borderColor: '#fff',
+    color: '#fff',
     borderWidth: 1,
     width: '50%',
     paddingLeft: 10,
     marginBottom: 15,
-    borderRadius: 5,
+    borderRadius: 20,
   },
   buttonsContainer: {
     display: 'flex',
@@ -175,7 +183,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   itemContainer: {
-    backgroundColor: '#e9e9e9',
+    backgroundColor: '#909090',
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 10,
@@ -188,14 +196,16 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#fff',
   },
   itemValue: {
     fontSize: 18,
-    color: '#800080',
+    color: '#fff',
   },
   picker: {
     height: 40,
-    borderColor: '#ddd',
+    color: '#fff',
+    borderColor: '#fff',
     borderWidth: 1,
     marginBottom: 15,
     borderRadius: 5,
