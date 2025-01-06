@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, FlatList, Alert } from 'react-native';
+import { StyleSheet, Text, View, TextInput, FlatList, Alert, Modal, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -8,10 +8,10 @@ export default function Home() {
   const [expense, setExpense] = useState('');
   const [total, setTotal] = useState(0);
   const [expensesList, setExpensesList] = useState<{ category: string, value: number }[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const categories = ['Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Casa', 'Outros'];
 
-  // Recuperar a lista de despesas ao carregar o app
   const loadExpenses = async () => {
     try {
       const savedExpenses = await AsyncStorage.getItem('expenses');
@@ -46,11 +46,11 @@ export default function Home() {
         acc[expense.category] = expense.value;
       }
       return acc;
-    }, {});
+    }, {}); 
   };
 
   useEffect(() => {
-    loadExpenses();  // Carrega as despesas ao iniciar o app
+    loadExpenses();
   }, []);
 
   const addExpense = () => {
@@ -63,6 +63,7 @@ export default function Home() {
       saveExpenses(updatedExpenses);
       setExpense('');
       setCategory('');
+      setModalVisible(false);
       calculateTotal(updatedExpenses);
     } else {
       Alert.alert('Erro', 'Por favor, selecione uma categoria e insira um valor numérico válido para a despesa.');
@@ -87,30 +88,58 @@ export default function Home() {
         <Text style={styles.headerText}>Total</Text>
         <Text style={styles.headerText}>R$ {total.toFixed(2)}</Text>
       </View>
-      <Text style={styles.headerText}>Adicionar Despesas</Text>
-      <View style={styles.inputContainer}>
-        <Picker
-          selectedValue={category}
-          style={styles.inputBox}
-          onValueChange={(itemValue) => setCategory(itemValue)}
-        >
-          <Picker.Item label="Categoria" value="" />
-          {categories.map((cat, index) => (
-            <Picker.Item key={index} label={cat} value={cat} />
-          ))}
-        </Picker>
-        <TextInput
-          style={styles.inputBox}
-          placeholder="Valor"
-          keyboardType="numeric"
-          value={expense}
-          onChangeText={(text) => setExpense(text.replace(/[^\d.,]/g, '').replace(/,/g, '.'))}
-          />
-      </View>
-      <View style={styles.buttonsContainer}>
-        <Button title="Adicionar" onPress={addExpense} color="#636363" />
-        <Button title="Resetar" onPress={clearList} color="red" />
-      </View>
+      <TouchableOpacity 
+        style={styles.addButton}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={styles.addButtonText}>Adicionar Despesas</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={[styles.addButton, { backgroundColor: '#171718' }]} 
+        onPress={() => clearList()}
+      >
+        <Text style={styles.addButtonText}>Resetar</Text>
+      </TouchableOpacity>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.headerText}>Adicionar Despesas</Text>
+            <View style={styles.inputContainer}>
+              <Picker
+                selectedValue={category}
+                style={styles.inputBox}
+                onValueChange={(itemValue) => setCategory(itemValue)}
+              >
+                <Picker.Item label="Categoria" value="" />
+                {categories.map((cat, index) => (
+                  <Picker.Item key={index} label={cat} value={cat} />
+                ))}
+              </Picker>
+              <TextInput
+                style={styles.inputBox}
+                placeholder="Valor"
+                keyboardType="numeric"
+                value={expense}
+                onChangeText={(text) => setExpense(text.replace(/[^\d.,]/g, '').replace(/,/g, '.'))}
+              />
+            </View>
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity style={styles.addButton} onPress={addExpense}>
+                <Text style={styles.addButtonText}>Adicionar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.addButton, { backgroundColor: '#171718' }]} onPress={() => setModalVisible(false)}>
+                <Text style={styles.addButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <FlatList
         data={Object.keys(groupedExpenses)}
         renderItem={({ item }) => (
@@ -120,6 +149,7 @@ export default function Home() {
           </View>
         )}
         keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={styles.listContainer}  // Aplica o estilo de alinhamento da lista
       />
     </View>
   );
@@ -128,7 +158,6 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
     backgroundColor: '#494848',
@@ -138,19 +167,22 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     width: '100%',
   },
+  listContainer: {
+    flex: 1,  
+    justifyContent: 'flex-end',  
+    width: '100%',
+    paddingBottom: 20,
+  },
   headerContainer: {
-    display: 'flex',
-    gap: 10,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 10,
     backgroundColor: '#909090',
     paddingHorizontal: 40,
     paddingVertical: 10,
     borderRadius: 40,
     margin: 20,
-    minHeight: 70,
-    minWidth: '85%',
   },
   headerText: {
     fontSize: 25,
@@ -158,9 +190,8 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   inputContainer: {
-    display: 'flex',
-    gap: 10,
     flexDirection: 'row',
+    gap: 10,
     alignItems: 'center',
     marginBottom: 20,
     marginTop: 20,
@@ -176,9 +207,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   buttonsContainer: {
-    display: 'flex',
-    gap: 15,
     flexDirection: 'row',
+    gap: 15,
     alignItems: 'center',
     marginBottom: 20,
   },
@@ -202,12 +232,29 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
   },
-  picker: {
-    height: 40,
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    backgroundColor: '#494848',
+    padding: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  addButton: {
+    backgroundColor: '#636363',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  addButtonText: {
     color: '#fff',
-    borderColor: '#fff',
-    borderWidth: 1,
-    marginBottom: 15,
-    borderRadius: 5,
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
