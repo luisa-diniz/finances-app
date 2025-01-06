@@ -7,27 +7,33 @@ export default function Home() {
   const [category, setCategory] = useState('');
   const [expense, setExpense] = useState('');
   const [total, setTotal] = useState(0);
-  const [expensesList, setExpensesList] = useState<{ category: string, value: number }[]>([]);
+  const [expensesByMonth, setExpensesByMonth] = useState<{ [key: string]: { category: string, value: number }[] }>({});
   const [modalVisible, setModalVisible] = useState(false);
-
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);  // Mês no formato 1 a 12
+  
   const categories = ['Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Casa', 'Outros'];
+
+  const monthNames = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
 
   const loadExpenses = async () => {
     try {
       const savedExpenses = await AsyncStorage.getItem('expenses');
       if (savedExpenses) {
         const parsedExpenses = JSON.parse(savedExpenses);
-        setExpensesList(parsedExpenses);
-        calculateTotal(parsedExpenses);  
+        setExpensesByMonth(parsedExpenses);
+        calculateTotal(parsedExpenses[selectedMonth] || []);
       }
     } catch (error) {
       console.error('Error loading expenses:', error);
     }
   };
 
-  const saveExpenses = async (newExpensesList: { category: string, value: number }[]) => {
+  const saveExpenses = async (newExpensesByMonth: { [key: string]: { category: string, value: number }[] }) => {
     try {
-      await AsyncStorage.setItem('expenses', JSON.stringify(newExpensesList));
+      await AsyncStorage.setItem('expenses', JSON.stringify(newExpensesByMonth));
     } catch (error) {
       console.error('Error saving expenses:', error);
     }
@@ -38,56 +44,64 @@ export default function Home() {
     setTotal(totalSum);
   };
 
-  const calculateTotalByCategory = (expenses: { category: string, value: number }[]) => {
-    return expenses.reduce<{ [key: string]: number }>((acc, expense) => {
-      if (acc[expense.category]) {
-        acc[expense.category] += expense.value;
-      } else {
-        acc[expense.category] = expense.value;
-      }
-      return acc;
-    }, {}); 
-  };
-
-  useEffect(() => {
-    loadExpenses();
-  }, []);
-
   const addExpense = () => {
     const numericExpense = parseFloat(expense);
 
     if (category.trim() !== '' && !isNaN(numericExpense) && numericExpense > 0) {
       const newExpense = { category, value: numericExpense };
-      const updatedExpenses = [...expensesList, newExpense];
-      setExpensesList(updatedExpenses);
+      
+      const updatedExpenses = { ...expensesByMonth };
+      if (!updatedExpenses[selectedMonth]) {
+        updatedExpenses[selectedMonth] = [];
+      }
+      
+      updatedExpenses[selectedMonth].push(newExpense);
+      setExpensesByMonth(updatedExpenses);
       saveExpenses(updatedExpenses);
       setExpense('');
       setCategory('');
       setModalVisible(false);
-      calculateTotal(updatedExpenses);
+      calculateTotal(updatedExpenses[selectedMonth]);
     } else {
       Alert.alert('Erro', 'Por favor, selecione uma categoria e insira um valor numérico válido para a despesa.');
     }
   };
 
-  const clearList = async () => {
-    try {
-      await AsyncStorage.clear();
-      setExpensesList([]);
-      setTotal(0);
-    } catch (error) {
-      console.error('Error clearing expenses:', error);
+  const changeMonth = (direction: 'next' | 'prev') => {
+    let newMonth = selectedMonth + (direction === 'next' ? 1 : -1);
+    if (newMonth > 12) {
+      newMonth = 1;
+    } else if (newMonth < 1) {
+      newMonth = 12;
     }
+    setSelectedMonth(newMonth);
+    calculateTotal(expensesByMonth[newMonth] || []);
   };
 
-  const groupedExpenses = calculateTotalByCategory(expensesList);  // Agrupa as despesas por categoria para exibição.
+  useEffect(() => {
+    loadExpenses();
+  }, [selectedMonth]);
 
+  const groupedExpenses = expensesByMonth[selectedMonth] || [];
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Total</Text>
         <Text style={styles.headerText}>R$ {total.toFixed(2)}</Text>
       </View>
+      
+      <View style={styles.monthSelectorContainer}>
+        <TouchableOpacity onPress={() => changeMonth('prev')}>
+          <Text style={styles.monthSelectorText}>Anterior</Text>
+        </TouchableOpacity>
+        <Text style={styles.monthSelectorText}>
+          {monthNames[selectedMonth - 1]}
+        </Text>
+        <TouchableOpacity onPress={() => changeMonth('next')}>
+          <Text style={styles.monthSelectorText}>Próximo</Text>
+        </TouchableOpacity>
+      </View>
+      
       <TouchableOpacity 
         style={styles.addButton}
         onPress={() => setModalVisible(true)}
@@ -96,10 +110,15 @@ export default function Home() {
       </TouchableOpacity>
       <TouchableOpacity 
         style={[styles.addButton, { backgroundColor: '#171718' }]} 
-        onPress={() => clearList()}
+        onPress={() => {
+          setExpensesByMonth({});
+          setTotal(0);
+          saveExpenses({});
+        }}
       >
         <Text style={styles.addButtonText}>Resetar</Text>
       </TouchableOpacity>
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -141,15 +160,15 @@ export default function Home() {
       </Modal>
 
       <FlatList
-        data={Object.keys(groupedExpenses)}
+        data={groupedExpenses}
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
-            <Text style={styles.itemTitle}>{item}</Text>
-            <Text style={styles.itemValue}>R$ {groupedExpenses[item].toFixed(2)}</Text>
+            <Text style={styles.itemTitle}>{item.category}</Text>
+            <Text style={styles.itemValue}>R$ {item.value.toFixed(2)}</Text>
           </View>
         )}
         keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={styles.listContainer}  // Aplica o estilo de alinhamento da lista
+        contentContainerStyle={styles.listContainer}
       />
     </View>
   );
@@ -256,5 +275,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  monthSelectorContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 20,
+    marginVertical: 20,
+  },
+  monthSelectorText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });
