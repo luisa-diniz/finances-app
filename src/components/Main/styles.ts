@@ -6,11 +6,12 @@ export const styles = StyleSheet.create({
       justifyContent: 'flex-start',
       alignItems: 'center',
       backgroundColor: '#494848',
-      paddingTop: 70,
+      paddingTop: 30,
       paddingBottom: 20,
       paddingLeft: 20,
       paddingRight: 20,
       width: '100%',
+      height: '100%',
     },
     headerContainer: {
       flexDirection: 'row',
@@ -21,7 +22,7 @@ export const styles = StyleSheet.create({
       paddingHorizontal: 40,
       paddingVertical: 10,
       borderRadius: 40,
-      margin: 20,
+      margin: 5,
     },
     headerText: {
       fontSize: 25,
@@ -128,4 +129,7 @@ export const styles = StyleSheet.create({
       justifyContent: 'flex-start',  
       width: '100%',
     },
+    scrollViewContainer: {
+        flex: 1,
+      },
   });

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, FlatList, Alert, Modal, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TextInput, FlatList, Alert, Modal, TouchableOpacity, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Image } from 'react-native';
 import { styles } from './styles';
 
 export default function Home() {
@@ -154,7 +153,7 @@ export default function Home() {
           );
         }}
         keyExtractor={(item) => item}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={{ paddingBottom: 20 }} // Garantindo que tenha espaço no fundo
       />
 
       <Modal
@@ -206,6 +205,8 @@ export default function Home() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.headerText}>{selectedCategory}</Text>
+
+            {/* FlatList aqui substituindo o ScrollView */}
             <FlatList
               data={groupedExpenses[selectedCategory || '']}
               renderItem={({ item }) => (
@@ -217,14 +218,13 @@ export default function Home() {
               keyExtractor={(item, index) => index.toString()}
               contentContainerStyle={styles.detailsListContainer}
             />
+
             <View style={styles.buttonsContainer}>
               <TouchableOpacity 
                 style={[styles.defaultButton, { backgroundColor: '#2e2e2e' }]} 
                 onPress={deleteCategoryExpenses}
               >
-                 <Image source={require('../../../assets/delete-icon.png')}
-              style={{ width: 22, height: 22 }} 
-              />
+                <Image source={require('../../../assets/delete-icon.png')} style={{ width: 22, height: 22 }} />
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.defaultButton, { backgroundColor: '#171718' }]} 
