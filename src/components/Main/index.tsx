@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, FlatList, Alert, Modal, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'react-native';
 
 export default function Home() {
   const [category, setCategory] = useState('');
@@ -9,8 +10,8 @@ export default function Home() {
   const [total, setTotal] = useState(0);
   const [expensesByMonth, setExpensesByMonth] = useState<{ [key: string]: { category: string, value: number }[] }>({});
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);  // Mês no formato 1 a 12
-  
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+
   const categories = ['Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Casa', 'Outros'];
 
   const monthNames = [
@@ -67,6 +68,16 @@ export default function Home() {
     }
   };
 
+  const deleteExpense = (expenseIndex: number) => {
+    const updatedExpenses = { ...expensesByMonth };
+    if (updatedExpenses[selectedMonth]) {
+      updatedExpenses[selectedMonth] = updatedExpenses[selectedMonth].filter((_, index) => index !== expenseIndex);
+      setExpensesByMonth(updatedExpenses);
+      saveExpenses(updatedExpenses);
+      calculateTotal(updatedExpenses[selectedMonth]);
+    }
+  };
+
   const changeMonth = (direction: 'next' | 'prev') => {
     let newMonth = selectedMonth + (direction === 'next' ? 1 : -1);
     if (newMonth > 12) {
@@ -92,13 +103,13 @@ export default function Home() {
       
       <View style={styles.monthSelectorContainer}>
         <TouchableOpacity onPress={() => changeMonth('prev')}>
-          <Text style={styles.monthSelectorText}>Anterior</Text>
+          <Text style={[styles.monthSelectorText, {opacity: 0.5}]}>Anterior</Text>
         </TouchableOpacity>
         <Text style={styles.monthSelectorText}>
           {monthNames[selectedMonth - 1]}
         </Text>
         <TouchableOpacity onPress={() => changeMonth('next')}>
-          <Text style={styles.monthSelectorText}>Próximo</Text>
+          <Text style={[styles.monthSelectorText, {opacity: 0.5}]}>Próximo</Text>
         </TouchableOpacity>
       </View>
       
@@ -108,17 +119,6 @@ export default function Home() {
       >
         <Text style={styles.addButtonText}>Adicionar Despesas</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={[styles.addButton, { backgroundColor: '#171718' }]} 
-        onPress={() => {
-          setExpensesByMonth({});
-          setTotal(0);
-          saveExpenses({});
-        }}
-      >
-        <Text style={styles.addButtonText}>Resetar</Text>
-      </TouchableOpacity>
-
       <Modal
         animationType="slide"
         transparent={true}
@@ -161,10 +161,18 @@ export default function Home() {
 
       <FlatList
         data={groupedExpenses}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <View style={styles.itemContainer}>
             <Text style={styles.itemTitle}>{item.category}</Text>
             <Text style={styles.itemValue}>R$ {item.value.toFixed(2)}</Text>
+            <TouchableOpacity 
+              style={styles.deleteButton} 
+              onPress={() => deleteExpense(index)}
+            >
+              <Image source={require('../../../assets/delete-icon.png')}
+              style={{ width: 38, height: 38 }} 
+              />
+            </TouchableOpacity>
           </View>
         )}
         keyExtractor={(item, index) => index.toString()}
@@ -288,4 +296,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
+  deleteButton: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 10,
+    marginLeft: 10,
+  }, 
 });
