@@ -11,9 +11,9 @@ export default function Home() {
   const [expensesByMonth, setExpensesByMonth] = useState<{ [key: string]: { category: string, value: number }[] }>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = ['Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Casa', 'Outros'];
-
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -47,15 +47,12 @@ export default function Home() {
 
   const addExpense = () => {
     const numericExpense = parseFloat(expense);
-
     if (category.trim() !== '' && !isNaN(numericExpense) && numericExpense > 0) {
       const newExpense = { category, value: numericExpense };
-      
       const updatedExpenses = { ...expensesByMonth };
       if (!updatedExpenses[selectedMonth]) {
         updatedExpenses[selectedMonth] = [];
       }
-      
       updatedExpenses[selectedMonth].push(newExpense);
       setExpensesByMonth(updatedExpenses);
       saveExpenses(updatedExpenses);
@@ -89,11 +86,43 @@ export default function Home() {
     calculateTotal(expensesByMonth[newMonth] || []);
   };
 
+  const groupExpensesByCategory = () => {
+    const grouped: { [key: string]: { category: string, value: number }[] } = {};
+    const expenses = expensesByMonth[selectedMonth] || [];
+    
+    expenses.forEach(expense => {
+      if (!grouped[expense.category]) {
+        grouped[expense.category] = [];
+      }
+      grouped[expense.category].push(expense);
+    });
+
+    return grouped;
+  };
+
+  const groupedExpenses = groupExpensesByCategory();
+
+  const showCategoryDetails = (category: string) => {
+    setSelectedCategory(category);
+  };
+
+  const deleteCategoryExpenses = () => {
+    const updatedExpenses = { ...expensesByMonth };
+    if (updatedExpenses[selectedMonth]) {
+      updatedExpenses[selectedMonth] = updatedExpenses[selectedMonth].filter(
+        expense => expense.category !== selectedCategory
+      );
+      setExpensesByMonth(updatedExpenses);
+      saveExpenses(updatedExpenses);
+      calculateTotal(updatedExpenses[selectedMonth]);
+    }
+    setSelectedCategory(null); // Fechar o modal após a exclusão
+  };
+
   useEffect(() => {
     loadExpenses();
   }, [selectedMonth]);
 
-  const groupedExpenses = expensesByMonth[selectedMonth] || [];
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
@@ -119,6 +148,24 @@ export default function Home() {
       >
         <Text style={styles.addButtonText}>Adicionar Despesas</Text>
       </TouchableOpacity>
+
+      <FlatList
+        data={Object.keys(groupedExpenses)}
+        renderItem={({ item }) => {
+          const categoryTotal = groupedExpenses[item].reduce((sum, expense) => sum + expense.value, 0);
+          return (
+            <TouchableOpacity onPress={() => showCategoryDetails(item)}>
+              <View style={styles.itemContainer}>
+                <Text style={styles.itemTitle}>{item}</Text>
+                <Text style={styles.itemValue}>R$ {categoryTotal.toFixed(2)}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+        keyExtractor={(item) => item}
+        contentContainerStyle={styles.listContainer}
+      />
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -159,25 +206,45 @@ export default function Home() {
         </View>
       </Modal>
 
-      <FlatList
-        data={groupedExpenses}
-        renderItem={({ item, index }) => (
-          <View style={styles.itemContainer}>
-            <Text style={styles.itemTitle}>{item.category}</Text>
-            <Text style={styles.itemValue}>R$ {item.value.toFixed(2)}</Text>
-            <TouchableOpacity 
-              style={styles.deleteButton} 
-              onPress={() => deleteExpense(index)}
-            >
-              <Image source={require('../../../assets/delete-icon.png')}
-              style={{ width: 38, height: 38 }} 
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={selectedCategory !== null}
+        onRequestClose={() => setSelectedCategory(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.headerText}>{selectedCategory}</Text>
+            <FlatList
+              data={groupedExpenses[selectedCategory || '']}
+              renderItem={({ item }) => (
+                <View style={[styles.itemContainer, { marginTop: 20 }]}>
+                  <Text style={styles.itemTitle}>{item.category}</Text>
+                  <Text style={styles.itemValue}>R$ {item.value.toFixed(2)}</Text>
+                </View>
+              )}
+              keyExtractor={(item, index) => index.toString()}
+              contentContainerStyle={styles.detailsListContainer}
+            />
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity 
+                style={[styles.addButton, { backgroundColor: '#2e2e2e' }]} 
+                onPress={deleteCategoryExpenses}
+              >
+                 <Image source={require('../../../assets/delete-icon.png')}
+              style={{ width: 22, height: 22 }} 
               />
-            </TouchableOpacity>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.addButton, { backgroundColor: '#171718' }]} 
+                onPress={() => setSelectedCategory(null)}
+              >
+                <Text style={styles.addButtonText}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        )}
-        keyExtractor={(item, index) => index.toString()}
-        contentContainerStyle={styles.listContainer}
-      />
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -305,9 +372,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  deleteButton: {
-    backgroundColor: 'transparent',
-    paddingHorizontal: 10,
-    marginLeft: 10,
-  }, 
+  detailsListContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',  
+    width: '100%',
+  },
 });
