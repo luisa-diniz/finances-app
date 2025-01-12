@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, TextInput, FlatList, Alert, Modal, TouchableOpa
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'react-native';
+import { styles } from './styles';
 
 export default function Home() {
   const [category, setCategory] = useState('');
@@ -65,16 +66,6 @@ export default function Home() {
     }
   };
 
-  const deleteExpense = (expenseIndex: number) => {
-    const updatedExpenses = { ...expensesByMonth };
-    if (updatedExpenses[selectedMonth]) {
-      updatedExpenses[selectedMonth] = updatedExpenses[selectedMonth].filter((_, index) => index !== expenseIndex);
-      setExpensesByMonth(updatedExpenses);
-      saveExpenses(updatedExpenses);
-      calculateTotal(updatedExpenses[selectedMonth]);
-    }
-  };
-
   const changeMonth = (direction: 'next' | 'prev') => {
     let newMonth = selectedMonth + (direction === 'next' ? 1 : -1);
     if (newMonth > 12) {
@@ -116,7 +107,7 @@ export default function Home() {
       saveExpenses(updatedExpenses);
       calculateTotal(updatedExpenses[selectedMonth]);
     }
-    setSelectedCategory(null); // Fechar o modal após a exclusão
+    setSelectedCategory(null);
   };
 
   useEffect(() => {
@@ -143,10 +134,10 @@ export default function Home() {
       </View>
       
       <TouchableOpacity 
-        style={styles.addButton}
+        style={styles.defaultButton}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={styles.addButtonText}>Adicionar Despesas</Text>
+        <Text style={styles.defaultButtonText}>Adicionar Despesas</Text>
       </TouchableOpacity>
 
       <FlatList
@@ -195,11 +186,11 @@ export default function Home() {
               />
             </View>
             <View style={styles.buttonsContainer}>
-              <TouchableOpacity style={styles.addButton} onPress={addExpense}>
-                <Text style={styles.addButtonText}>Adicionar</Text>
+              <TouchableOpacity style={styles.defaultButton} onPress={addExpense}>
+                <Text style={styles.defaultButtonText}>Adicionar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.addButton, { backgroundColor: '#171718' }]} onPress={() => setModalVisible(false)}>
-                <Text style={styles.addButtonText}>Cancelar</Text>
+              <TouchableOpacity style={[styles.defaultButton, { backgroundColor: '#171718' }]} onPress={() => setModalVisible(false)}>
+                <Text style={styles.defaultButtonText}>Cancelar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -228,7 +219,7 @@ export default function Home() {
             />
             <View style={styles.buttonsContainer}>
               <TouchableOpacity 
-                style={[styles.addButton, { backgroundColor: '#2e2e2e' }]} 
+                style={[styles.defaultButton, { backgroundColor: '#2e2e2e' }]} 
                 onPress={deleteCategoryExpenses}
               >
                  <Image source={require('../../../assets/delete-icon.png')}
@@ -236,10 +227,10 @@ export default function Home() {
               />
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.addButton, { backgroundColor: '#171718' }]} 
+                style={[styles.defaultButton, { backgroundColor: '#171718' }]} 
                 onPress={() => setSelectedCategory(null)}
               >
-                <Text style={styles.addButtonText}>Fechar</Text>
+                <Text style={styles.defaultButtonText}>Fechar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -248,133 +239,3 @@ export default function Home() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    backgroundColor: '#494848',
-    paddingTop: 70,
-    paddingBottom: 20,
-    paddingLeft: 20,
-    paddingRight: 20,
-    width: '100%',
-  },
-  listContainer: {
-    flex: 1,  
-    justifyContent: 'flex-end',  
-    width: '100%',
-    paddingBottom: 20,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#909090',
-    paddingHorizontal: 40,
-    paddingVertical: 10,
-    borderRadius: 40,
-    margin: 20,
-  },
-  headerText: {
-    fontSize: 25,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 20,
-  },
-  valueBox: {
-    height: 55,
-    borderColor: '#fff',
-    color: '#fff',
-    borderWidth: 1,
-    width: '40%',
-    paddingLeft: 20,
-    marginBottom: 15,
-    borderRadius: 20,
-    fontSize: 18,
-  },
-  picker: {
-    height: 55,
-    color: '#fff',
-    width: '55%',
-    paddingLeft: 10,
-    marginBottom: 15,
-    borderRadius: 20,
-  },
-  buttonsContainer: {
-    flexDirection: 'row',
-    gap: 15,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  itemContainer: {
-    backgroundColor: '#909090',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-  },
-  itemTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  itemValue: {
-    fontSize: 18,
-    color: '#fff',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContainer: {
-    backgroundColor: '#494848',
-    padding: 30,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  addButton: {
-    backgroundColor: '#636363',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    marginBottom: 20,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  monthSelectorContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: 20,
-    marginVertical: 20,
-  },
-  monthSelectorText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  detailsListContainer: {
-    flex: 1,
-    justifyContent: 'flex-start',  
-    width: '100%',
-  },
-});
