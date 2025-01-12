@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "finances-app",
+    "name": "Minimalist Finances",
     "slug": "finances-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,7 +20,7 @@
       "versionCode": 1,
       "permissions": [],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       }
     },
