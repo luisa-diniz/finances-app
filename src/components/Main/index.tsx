@@ -131,7 +131,7 @@ export default function Home() {
             <View style={styles.inputContainer}>
               <Picker
                 selectedValue={category}
-                style={styles.inputBox}
+                style={styles.picker}
                 onValueChange={(itemValue) => setCategory(itemValue)}
               >
                 <Picker.Item label="Categoria" value="" />
@@ -140,7 +140,7 @@ export default function Home() {
                 ))}
               </Picker>
               <TextInput
-                style={styles.inputBox}
+                style={styles.valueBox}
                 placeholder="Valor"
                 keyboardType="numeric"
                 value={expense}
@@ -223,12 +223,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 20,
   },
-  inputBox: {
+  valueBox: {
     height: 55,
     borderColor: '#fff',
     color: '#fff',
     borderWidth: 1,
-    width: '50%',
+    width: '40%',
+    paddingLeft: 20,
+    marginBottom: 15,
+    borderRadius: 20,
+    fontSize: 18,
+  },
+  picker: {
+    height: 55,
+    color: '#fff',
+    width: '55%',
     paddingLeft: 10,
     marginBottom: 15,
     borderRadius: 20,
