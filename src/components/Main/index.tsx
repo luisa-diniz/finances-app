@@ -153,7 +153,7 @@ export default function Home() {
           );
         }}
         keyExtractor={(item) => item}
-        contentContainerStyle={{ paddingBottom: 20 }} // Garantindo que tenha espaço no fundo
+        contentContainerStyle={{ paddingBottom: 20 }}
       />
 
       <Modal
@@ -204,13 +204,12 @@ export default function Home() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.headerText}>{selectedCategory}</Text>
+            <Text style={[styles.headerText, , { marginBottom: 20 }]}>{selectedCategory}</Text>
 
-            {/* FlatList aqui substituindo o ScrollView */}
-            <FlatList
-              data={groupedExpenses[selectedCategory || '']}
+            <FlatList<{ category: string; value: number }>
+              data={groupedExpenses[selectedCategory || ''] || []}
               renderItem={({ item }) => (
-                <View style={[styles.itemContainer, { marginTop: 20 }]}>
+                <View style={styles.itemContainer}>
                   <Text style={styles.itemTitle}>{item.category}</Text>
                   <Text style={styles.itemValue}>R$ {item.value.toFixed(2)}</Text>
                 </View>

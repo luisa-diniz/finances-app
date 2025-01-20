@@ -125,7 +125,6 @@ export const styles = StyleSheet.create({
       color: '#fff',
     },
     detailsListContainer: {
-      flex: 1,
       justifyContent: 'flex-start',  
       width: '100%',
     },
