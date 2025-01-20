@@ -223,7 +223,7 @@ export default function Home() {
               contentContainerStyle={styles.detailsListContainer}
             />
 
-            <View style={styles.buttonsContainer}>
+            <View style={[styles.buttonsContainer , { marginTop: 15, marginBottom: 5,}]}>
               <TouchableOpacity 
                 style={[styles.defaultButton, { backgroundColor: '#2e2e2e' }]} 
                 onPress={deleteCategoryExpenses}
