@@ -140,8 +140,13 @@ export default function Home() {
       </TouchableOpacity>
 
       <FlatList
-        data={Object.keys(groupedExpenses)}
-        renderItem={({ item }) => {
+          data={Object.keys(groupedExpenses)
+            .sort((a, b) => {
+              const totalA = groupedExpenses[a].reduce((sum, expense) => sum + expense.value, 0);
+              const totalB = groupedExpenses[b].reduce((sum, expense) => sum + expense.value, 0);
+              return totalB - totalA;
+            })}        
+          renderItem={({ item }) => {
           const categoryTotal = groupedExpenses[item].reduce((sum, expense) => sum + expense.value, 0);
           return (
             <TouchableOpacity onPress={() => showCategoryDetails(item)}>
