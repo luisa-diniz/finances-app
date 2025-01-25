@@ -13,7 +13,7 @@ export default function Home() {
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const categories = ['Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Casa', 'Outros'];
+  const categories = ['Alimentação', 'Transporte', 'Saúde', 'Maquiagem', 'Presentes', 'SkinCare', 'Lazer', 'Casa', 'Outros'];
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
